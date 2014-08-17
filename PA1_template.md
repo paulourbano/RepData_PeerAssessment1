@@ -166,7 +166,33 @@ tableNAs
 ## FALSE  TRUE 
 ## 15264  2304
 ```
-Number of NAs in the data set is equal to 2304
+Number of NAs in the data set is equal to **2304**
 
 
+Impute the NAs with the mean, disregarding zeros:
+
+
+```r
+newStepsDF = stepsDF
+nonZeroSubset = subset(newStepsDF, steps > 0)
+newStepsDF$steps[is.na(newStepsDF$steps)] = mean(nonZeroSubset$steps)
+```
+
+Replacing the NAs by the mean of non zero observations has a significant impact. The histogram below shows that by a huge peak on the mean value.
+
+
+
+```r
+library(ggplot2)
+library(gridExtra)
+ghist1 = ggplot(newStepsDF, aes(x=steps)) + geom_histogram(binwidth=10, colour="black", fill="lightblue") 
+ghist1 = ghist1 + xlab("Number of steps") + ylab("Frequency") + ggtitle("All observations")
+ghist2 = ggplot(subset(newStepsDF, steps > 0), aes(x=steps)) + geom_histogram(binwidth=10, colour="black", fill="lightblue")
+ghist2 = ghist2 + xlab("Number of steps") + ylab("Frequency") + ggtitle("Observations with steps > 0")
+grid.arrange(ghist1, ghist2, ncol=2)
+```
+
+![plot of chunk histogram_imputed](figure/histogram_imputed.png) 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+NA
