@@ -1,4 +1,4 @@
-# Reproducible Research: Peer Assessment 1
+# Reproducible Research: Peer Assessment 1 
 
 Report made as part of the course Reproducible Research, given by Roger D. Peng, Jeff Leek and Brian Caffo, on its August 2014 iteration.
 
