@@ -1,8 +1,8 @@
-# Reproducible Research: Peer Assessment 1
+# Reproducible Research: Peer Assessment 1 
 
-Report made as part of the course Reproducible Research, given by Roger D. Peng, Jeff Leek and Brian Caffo, on its August 2014 iteration.
+Report made as part of the course Reproducible Research, given by Roger D. Peng, Jeff Leek and Brian Caffo, on its September 2014 iteration.
 
-The code and text below encompass the activities asked as part of the peer assessment 1 of the course, sent for evaluation on the August, 17th, 2014.
+The code and text below encompass the activities asked as part of the peer assessment 1 of the course, sent for evaluation on the September, 14th, 2014.
 
 ## Loading and preprocessing the data  
 The first action is to load the data from an activity monitoring device used to collect data at a 5 minute interval. As explained in the assignment description, the data consists of two months of measurements from an anonymous individual collected during October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
@@ -49,20 +49,6 @@ str(stepsDF)
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 
-The class of the variable **date** is factor, which might not be suitable for the analysis as comparisons and operations on dates would be hindered. The code below converts the date to the POSIXct type and show an updated summary of the data frame.
-
-
-```r
-#stepsDF$date = as.POSIXlt(strptime(as.character(stepsDF$date), "%Y-%m-%d"))
-str(stepsDF)
-```
-
-```
-## 'data.frame':	17568 obs. of  3 variables:
-##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
-```
 
 ## What is mean total number of steps taken per day?
 
@@ -121,12 +107,10 @@ library(ggplot2)
 library(gridExtra)
 nonNAObservations = subset(stepsDF, !is.na(steps))
 aggregateSteps = aggregate(nonNAObservations$steps, list(interval = nonNAObservations$interval), mean)
-#plot(aggregateSteps$interval, aggregateSteps$x, type="l")
 plot1 = ggplot(aggregateSteps, aes(x=interval, y=x)) + geom_line() + xlab("Time interval") + ylab("Steps") + ggtitle("Mean steps per interval, all observations")
 
 nonZeroObservations = subset(stepsDF, steps > 0)
 aggregateNonZeroSteps = aggregate(nonZeroObservations$steps, list(interval = nonZeroObservations$interval), mean)
-#plot(aggregateNonZeroSteps$interval, aggregateNonZeroSteps$x, type="l")
 plot2 = ggplot(aggregateNonZeroSteps, aes(x=interval, y=x)) + geom_line() + xlab("Time interval") + ylab("Steps") + ggtitle("Mean steps per interval, steps > 0")
 grid.arrange(plot1, plot2, ncol=2)
 ```
@@ -169,30 +153,86 @@ tableNAs
 Number of NAs in the data set is equal to **2304**
 
 
-Impute the NAs with the mean, disregarding zeros:
+Impute the NAs with the mean of each day, disregarding zeros:
 
 
 ```r
 newStepsDF = stepsDF
+
+
+# Disregards readings with zero or NA
 nonZeroSubset = subset(newStepsDF, steps > 0)
-newStepsDF$steps[is.na(newStepsDF$steps)] = mean(nonZeroSubset$steps)
+
+# Get the mean for each day with steps > 0
+meanStepsDay = aggregate(nonZeroSubset$steps, list(date = nonZeroSubset$date), mean)
+
+newStepsDF$date = as.POSIXlt(strptime(as.character(newStepsDF$date), "%Y-%m-%d"))
+meanStepsDay$date = as.POSIXlt(strptime(as.character(meanStepsDay$date), "%Y-%m-%d"))
+
+# Some day will have no correspondence in the data frame meanStepsDay
+
+for (i in 1:nrow(newStepsDF[is.na(newStepsDF$steps),])) {
+      meanValue = meanStepsDay[meanStepsDay$date == newStepsDF[i,]$date,]$x
+      if (length(meanValue) == 0)
+            newStepsDF[i,]$steps = 0
+      else
+            newStepsDF[i,]$steps = meanValue
+}
 ```
 
-Replacing the NAs by the mean of non zero observations has a significant impact. The histogram below shows that by a huge peak on the mean value.
+Replacing the NAs by the mean of non zero observations has a significant impact. The histogram below shows that by .
 
 
 
 ```r
 library(ggplot2)
 library(gridExtra)
-ghist1 = ggplot(newStepsDF, aes(x=steps)) + geom_histogram(binwidth=10, colour="black", fill="lightblue") 
-ghist1 = ghist1 + xlab("Number of steps") + ylab("Frequency") + ggtitle("All observations")
+ghist1 = ggplot(subset(stepsDF, steps > 0), aes(x=steps)) + geom_histogram(binwidth=10, colour="black", fill="lightblue") 
+ghist1 = ghist1 + xlab("Number of steps") + ylab("Frequency") + ggtitle("Observations with steps > 0")
 ghist2 = ggplot(subset(newStepsDF, steps > 0), aes(x=steps)) + geom_histogram(binwidth=10, colour="black", fill="lightblue")
-ghist2 = ghist2 + xlab("Number of steps") + ylab("Frequency") + ggtitle("Observations with steps > 0")
+ghist2 = ghist2 + xlab("Number of steps") + ylab("Frequency") + ggtitle("Observations with steps > 0, imputed values")
 grid.arrange(ghist1, ghist2, ncol=2)
 ```
 
 ![plot of chunk histogram_imputed](figure/histogram_imputed.png) 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-NA
+The class of the variable **date** is factor, which might not be suitable for the analysis as comparisons and operations on dates would be hindered. The code below converts the date to the POSIXct type and show an updated summary of the data frame.
+
+
+```r
+stepsDF$date = as.POSIXlt(strptime(as.character(stepsDF$date), "%Y-%m-%d"))
+str(stepsDF)
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : POSIXlt, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
+The graphs below illustrate the different patterns between work days and weekends.
+
+
+```r
+library(ggplot2)
+library(gridExtra)
+
+nonZeroObservations = subset(stepsDF, steps > 0)
+nonZeroObservations$weekend = weekdays(nonZeroObservations$date) == "Saturday" | weekdays(nonZeroObservations$date) == "Sunday"
+
+nonZeroWeekdays = subset(nonZeroObservations, weekend == FALSE)
+nonZeroWeekends = subset(nonZeroObservations, weekend == TRUE)
+
+aggregateStepsWeekdays = aggregate(nonZeroWeekdays$steps, list(interval = nonZeroWeekdays$interval), mean)
+
+plot1 = ggplot(aggregateStepsWeekdays, aes(x=interval, y=x)) + geom_line() + xlab("Time interval") + ylab("Steps") + ggtitle("Mean steps per interval, weekdays")
+
+aggregateStepsWeekends = aggregate(nonZeroWeekends$steps, list(interval = nonZeroWeekends$interval), mean)
+
+plot2 = ggplot(aggregateStepsWeekends, aes(x=interval, y=x)) + geom_line() + xlab("Time interval") + ylab("Steps") + ggtitle("Mean steps per interval, weekends")
+grid.arrange(plot1, plot2, ncol=2)
+```
+
+![plot of chunk weekendpatterns](figure/weekendpatterns.png) 
