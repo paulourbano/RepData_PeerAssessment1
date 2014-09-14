@@ -180,7 +180,7 @@ for (i in 1:nrow(newStepsDF[is.na(newStepsDF$steps),])) {
 }
 ```
 
-Replacing the NAs by the mean of non zero observations has a significant impact. The histogram below shows that by .
+Replacing the NAs by the mean of non zero observations has a significant impact. The histogram below shows that by a clear chage in the frequencies distribution.
 
 
 
